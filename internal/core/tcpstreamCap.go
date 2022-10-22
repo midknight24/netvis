@@ -10,11 +10,11 @@ import (
 	"github.com/google/gopacket/pcap"
 )
 
-func Tcpstream() {
+func Tcpstream(capInt string, c chan Flow) {
 	var handle *pcap.Handle
 	var err error
 
-	ifname := "\\Device\\NPF_{AE039499-7655-476B-9119-7BC13F7F3CEC}"
+	ifname := capInt
 	handle, err = pcap.OpenLive(ifname, 1600, true, pcap.BlockForever)
 	if err != nil {
 		log.Fatal(err)
@@ -36,7 +36,15 @@ func Tcpstream() {
 				continue
 			}
 			ip := packet.NetworkLayer().(*layers.IPv4)
-			fmt.Println(ip.SrcIP, ip.DstIP)
+			// drops incoming packets
+			if ip.DstIP.IsPrivate() {
+				continue
+			}
+			c <- Flow{
+				DstIP: ip.DstIP,
+				SrcIP: ip.SrcIP,
+				Hash:  FlowHash(ip.SrcIP, ip.DstIP),
+			}
 		case <-ticker:
 			fmt.Println("tick")
 		}

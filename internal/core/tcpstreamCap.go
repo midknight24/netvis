@@ -1,9 +1,7 @@
 package core
 
 import (
-	"fmt"
 	"log"
-	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -25,7 +23,6 @@ func Tcpstream(capInt string, c chan Flow) {
 	log.Println("reading in packets")
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 	packets := packetSource.Packets()
-	ticker := time.Tick(time.Minute)
 	for {
 		select {
 		case packet := <-packets:
@@ -45,8 +42,6 @@ func Tcpstream(capInt string, c chan Flow) {
 				SrcIP: ip.SrcIP,
 				Hash:  FlowHash(ip.SrcIP, ip.DstIP),
 			}
-		case <-ticker:
-			fmt.Println("tick")
 		}
 	}
 
